@@ -13,8 +13,6 @@ def main(pre_trained_model, dataset_name):
     else:
         logger.error('Dataset Unknown!!')
 
-    logger.info("this is test message")
-
     train, validation, test = data_utils.load_data(dataset_name)
 
     train_frame = pd.DataFrame(train.to_pandas())

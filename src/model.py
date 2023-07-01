@@ -1,6 +1,7 @@
 import torch
 from transformers import BertTokenizer, BertForSequenceClassification, AdamW, get_scheduler
 from tqdm.auto import tqdm
+from sklearn.metrics import accuracy_score
 
 
 class Model:
@@ -64,6 +65,35 @@ class Model:
 
     def saveModel(self, location):
         self.model.save_pretrained(location+'/'+self.modelName+'fine_tuned.model')
+        return
+
+    def evaluate(self, test_data_loader):
+
+        pred = []
+        labels = []
+        self.model.to(self.device)
+        self.model.eval()
+        for batch in test_data_loader:
+            b_input_ids = batch[0].to(self.device)
+            b_input_mask = batch[1].to(self.device)
+            b_input_token_type = batch[2].to(self.device)
+            b_labels = batch[3].to(self.device)
+
+            with torch.no_grad():
+                outputs = self.model(b_input_ids, token_type_ids=b_input_token_type,
+                                               attention_mask=b_input_mask,
+                                               labels=b_labels)
+            logits = outputs.logits
+            predictions = torch.argmax(logits, dim=-1)
+
+            pred.append(predictions.tolist())
+            labels.append(b_labels.tolist())
+
+        pred = [item for sublist in pred for item in sublist]
+        labels = [item for sublist in labels for item in sublist]
+
+        print("Accuracy score (test data) : " + str(accuracy_score(pred, labels)))
+
         return
 
 
