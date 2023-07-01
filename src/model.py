@@ -46,8 +46,8 @@ class Model:
 
         return
 
-    def saveModel(self):
-        self.model.save_pretrained(self.modelName+'fine_tuned.model')
+    def saveModel(self, location):
+        self.model.save_pretrained(location+'/'+self.modelName+'fine_tuned.model')
         return
 
 
