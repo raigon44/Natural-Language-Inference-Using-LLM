@@ -8,14 +8,14 @@ class Model:
     def __init__(self, num_labels, modelName):
         self.tokenizer = BertTokenizer.from_pretrained(modelName)
         self.model = BertForSequenceClassification.from_pretrained(modelName, num_labels=num_labels,
-                                                                   output_attention=False, output_hidden_states=False)
+                                                                   output_attentions=False, output_hidden_states=False)
         self.modelName = modelName
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
 
-    def fineTune(self, epochs, warmupSteps, optimizer, trainDataLoader):
+    def fineTune(self, epochs, warmupSteps, optimizer, trainDataLoader, validationDataLoader):
 
         trainingSteps = epochs * len(trainDataLoader)
         lr_scheduler = get_scheduler(
@@ -44,6 +44,22 @@ class Model:
                 optimizer.zero_grad()
                 progress_bar.update(1)
 
+            train_loss = train_loss / len(trainDataLoader)
+
+            self.model.eval()
+
+            val_loss = 0
+            with torch.no_grad():
+                for batch in validationDataLoader:
+                    batch = [item.to(self.device) for item in batch]
+                    input_ids, attention_mask, labels = batch
+                    outputs = self.model(input_ids, attention_mask=attention_mask, labels=labels)
+                    loss = outputs.loss
+                    val_loss += loss.item()
+
+            val_loss = val_loss / len(validationDataLoader)
+
+            print(f"Epoch {epoch + 1}: Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
         return
 
     def saveModel(self, location):
