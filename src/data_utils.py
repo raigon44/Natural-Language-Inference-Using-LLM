@@ -7,3 +7,7 @@ def load_data(dataset_name):
     return data['train'], data['validation'], data['test']
 
 
+def getDataLoader(frame):
+
+    pass
+
